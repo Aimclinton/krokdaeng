@@ -1,4 +1,5 @@
 import { json, errorResponse } from "../lib/http.js";
+import { getAuthenticatedAdmin } from "../lib/auth.js";
 
 /** Zero-pad an integer to `len` digits. */
 function pad(n, len) {
@@ -509,4 +510,141 @@ export async function getOrder(request, env, id) {
       items: itemsOut,
     },
   });
+}
+
+/**
+ * GET /api/admin/orders?branch_id=&status=&date=YYYY-MM-DD&limit=
+ * Requires an authenticated admin. Lists orders (newest first) for the
+ * kitchen/front-counter dashboard, scoped to the admin's branches and
+ * optionally filtered by payment_status and day.
+ */
+export async function listOrdersAdmin(request, env) {
+  const admin = await getAuthenticatedAdmin(request, env);
+  if (!admin) return errorResponse("unauthorized", 401);
+
+  const url = new URL(request.url);
+  const branchId = url.searchParams.get("branch_id");
+  const status = url.searchParams.get("status"); // pending|paid|cancelled
+  const date = url.searchParams.get("date"); // YYYY-MM-DD, defaults to today
+  const limit = Math.min(Number(url.searchParams.get("limit")) || 50, 200);
+
+  if (admin.branch_ids && branchId && !admin.branch_ids.includes(Number(branchId))) {
+    return errorResponse("forbidden: branch not in your scope", 403);
+  }
+
+  const conditions = [];
+  const params = [];
+
+  if (admin.branch_ids) {
+    conditions.push(`o.branch_id IN (${admin.branch_ids.map(() => "?").join(",")})`);
+    params.push(...admin.branch_ids);
+  }
+  if (branchId) {
+    conditions.push(`o.branch_id = ?`);
+    params.push(Number(branchId));
+  }
+  if (status) {
+    if (!["pending", "paid", "cancelled"].includes(status)) {
+      return errorResponse("invalid status filter", 400);
+    }
+    conditions.push(`o.payment_status = ?`);
+    params.push(status);
+  }
+  conditions.push(`date(o.opened_at) = date(?)`);
+  params.push(date || new Date().toISOString().slice(0, 10));
+
+  const whereClause = conditions.length ? `WHERE ${conditions.join(" AND ")}` : "";
+
+  const { results: orders } = await env.DB.prepare(
+    `SELECT o.id, o.order_code, o.branch_id, b.name_th AS branch_name_th,
+            o.dine_type, o.table_number, o.payment_method, o.payment_status,
+            o.subtotal, o.discount_amount, o.total, o.note,
+            o.opened_at, o.paid_at
+     FROM orders o
+     JOIN branches b ON b.id = o.branch_id
+     ${whereClause}
+     ORDER BY o.id DESC
+     LIMIT ?`
+  )
+    .bind(...params, limit)
+    .all();
+
+  if (orders.length === 0) {
+    return json({ ok: true, orders: [] });
+  }
+
+  const orderIds = orders.map((o) => o.id);
+  const placeholders = orderIds.map(() => "?").join(",");
+  const { results: items } = await env.DB.prepare(
+    `SELECT order_id, menu_item_name_snapshot, quantity
+     FROM order_items WHERE order_id IN (${placeholders}) ORDER BY id ASC`
+  )
+    .bind(...orderIds)
+    .all();
+
+  const itemsByOrder = new Map();
+  for (const item of items) {
+    if (!itemsByOrder.has(item.order_id)) itemsByOrder.set(item.order_id, []);
+    itemsByOrder.get(item.order_id).push({
+      name: item.menu_item_name_snapshot,
+      quantity: item.quantity,
+    });
+  }
+
+  return json({
+    ok: true,
+    orders: orders.map((o) => ({ ...o, items: itemsByOrder.get(o.id) || [] })),
+  });
+}
+
+/**
+ * PATCH /api/admin/orders/:id
+ * Body: { payment_status: 'paid' | 'cancelled' }
+ * Requires an authenticated admin with the order's branch in scope.
+ * Marking 'paid' stamps paid_at and confirmed_by with the admin's email.
+ */
+export async function updateOrderStatus(request, env, id) {
+  const admin = await getAuthenticatedAdmin(request, env);
+  if (!admin) return errorResponse("unauthorized", 401);
+
+  let body;
+  try {
+    body = await request.json();
+  } catch {
+    return errorResponse("invalid JSON body", 400);
+  }
+
+  const { payment_status } = body;
+  if (!["paid", "cancelled"].includes(payment_status)) {
+    return errorResponse("payment_status must be 'paid' or 'cancelled'", 400);
+  }
+
+  const order = await env.DB.prepare(`SELECT id, branch_id FROM orders WHERE id = ?`)
+    .bind(id)
+    .first();
+  if (!order) return errorResponse("order_not_found", 404);
+
+  if (admin.branch_ids && !admin.branch_ids.includes(order.branch_id)) {
+    return errorResponse("forbidden: branch not in your scope", 403);
+  }
+
+  if (payment_status === "paid") {
+    await env.DB.prepare(
+      `UPDATE orders SET payment_status = 'paid', paid_at = datetime('now'),
+              confirmed_by = ?, updated_at = datetime('now')
+       WHERE id = ?`
+    )
+      .bind(admin.email, id)
+      .run();
+  } else {
+    await env.DB.prepare(
+      `UPDATE orders SET payment_status = 'cancelled', confirmed_by = ?,
+              updated_at = datetime('now')
+       WHERE id = ?`
+    )
+      .bind(admin.email, id)
+      .run();
+  }
+
+  return json({ ok: true, order: { id, payment_status } });
 }

@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>เข้าสู่ระบบแอดมิน — ครกแดง</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="auth-page">
+    <div class="auth-card">
+      <h1 class="auth-title">ครกแดง — แอดมิน</h1>
+      <p class="auth-subtitle" id="modeSubtitle">เข้าสู่ระบบเพื่อจัดการร้าน</p>
+      <p class="auth-error hidden" id="formError"></p>
+
+      <form id="authForm">
+        <div class="form-row" id="nameRow" style="display:none;">
+          <label class="form-label">ชื่อ</label>
+          <input type="text" id="nameInput" class="text-input" />
+        </div>
+        <div class="form-row">
+          <label class="form-label">อีเมล</label>
+          <input type="email" id="emailInput" class="text-input" required />
+        </div>
+        <div class="form-row">
+          <label class="form-label">รหัสผ่าน</label>
+          <input type="password" id="passwordInput" class="text-input" required minlength="8" />
+        </div>
+        <button type="submit" class="btn btn-primary btn-wide" id="submitBtn">เข้าสู่ระบบ</button>
+      </form>
+
+      <div class="auth-footer">
+        <button type="button" class="link-btn" id="toggleModeBtn">ยังไม่มีบัญชีแรก? ตั้งค่าเริ่มต้นที่นี่</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="config.js"></script>
+  <script src="api.js"></script>
+  <script src="login.js"></script>
+</body>
+</html>

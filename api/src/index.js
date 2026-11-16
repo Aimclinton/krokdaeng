@@ -13,18 +13,27 @@
  *   POST /api/admin/login
  *   GET  /api/admin/me
  *   POST /api/admin/invites            (owner/admin, authenticated)
+ *   GET  /api/admin/invites            (owner/admin, authenticated)
  *   GET  /api/admin/invites/:token
  *   POST /api/admin/invites/:token/accept
+ *   GET  /api/admin/orders             (authenticated, branch-scoped)
+ *   PATCH /api/admin/orders/:id        (authenticated, branch-scoped)
  */
 import { json, notFound, handleOptions } from "./lib/http.js";
 import { listBranches, getBranch } from "./routes/branches.js";
 import { getMenu } from "./routes/menu.js";
-import { createOrder, getOrder } from "./routes/orders.js";
+import {
+  createOrder,
+  getOrder,
+  listOrdersAdmin,
+  updateOrderStatus,
+} from "./routes/orders.js";
 import {
   bootstrap,
   login,
   me,
   createInvite,
+  listInvites,
   getInvite,
   acceptInvite,
 } from "./routes/admin.js";
@@ -85,6 +94,18 @@ export default {
 
     if (pathname === "/api/admin/invites" && method === "POST") {
       return createInvite(request, env);
+    }
+    if (pathname === "/api/admin/invites" && method === "GET") {
+      return listInvites(request, env);
+    }
+
+    if (pathname === "/api/admin/orders" && method === "GET") {
+      return listOrdersAdmin(request, env);
+    }
+
+    const adminOrderMatch = pathname.match(/^\/api\/admin\/orders\/(\d+)$/);
+    if (adminOrderMatch && method === "PATCH") {
+      return updateOrderStatus(request, env, Number(adminOrderMatch[1]));
     }
 
     const inviteMatch = pathname.match(/^\/api\/admin\/invites\/([^/]+)$/);

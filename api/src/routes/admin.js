@@ -194,6 +194,26 @@ export async function createInvite(request, env) {
 }
 
 /**
+ * GET /api/admin/invites
+ * Requires an authenticated owner/admin. Lists pending and recently-used
+ * invites for the invite-management screen.
+ */
+export async function listInvites(request, env) {
+  const caller = await getAuthenticatedAdmin(request, env);
+  if (!caller) return errorResponse("unauthorized", 401);
+  if (!["owner", "admin"].includes(caller.role)) {
+    return errorResponse("forbidden: only owner/admin can view invites", 403);
+  }
+
+  const { results } = await env.DB.prepare(
+    `SELECT id, email, role, branch_scope, expires_at, used_at, created_at
+     FROM admin_invites ORDER BY id DESC LIMIT 100`
+  ).all();
+
+  return json({ ok: true, invites: results });
+}
+
+/**
  * GET /api/admin/invites/:token
  * Public: lets the accept-invite page confirm the link is still valid
  * before asking the person to set a password.

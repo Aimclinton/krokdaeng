@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>แอดมิน — ครกแดง</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar-title">ครกแดง — แอดมิน</div>
+    <div class="topbar-admin">
+      <span id="adminLabel"></span>
+      <button class="logout-btn" id="logoutBtn" type="button">ออกจากระบบ</button>
+    </div>
+  </header>
+
+  <nav class="tabs">
+    <button class="tab-btn active" data-view="ordersView">ออเดอร์</button>
+    <button class="tab-btn" data-view="invitesView" id="invitesTabBtn">ผู้ใช้งาน / คำเชิญ</button>
+  </nav>
+
+  <!-- ===================== Orders view ===================== -->
+  <section class="view active" id="ordersView">
+    <div class="filter-row">
+      <select id="branchFilter"><option value="">ทุกสาขา</option></select>
+      <select id="statusFilter">
+        <option value="">ทุกสถานะ</option>
+        <option value="pending">รอชำระ</option>
+        <option value="paid">ชำระแล้ว</option>
+        <option value="cancelled">ยกเลิก</option>
+      </select>
+      <input type="date" id="dateFilter" />
+      <button class="refresh-btn" id="refreshOrdersBtn" type="button">รีเฟรช</button>
+    </div>
+    <div id="ordersList"></div>
+  </section>
+
+  <!-- ===================== Invites view ===================== -->
+  <section class="view" id="invitesView">
+    <div class="invite-form">
+      <h3 style="margin-top:0;">เชิญแอดมิน/พนักงานใหม่</h3>
+      <form id="inviteForm">
+        <div class="invite-form-row">
+          <input type="email" id="inviteEmail" placeholder="อีเมล" required />
+          <select id="inviteRole">
+            <option value="staff">พนักงาน</option>
+            <option value="admin">แอดมิน</option>
+            <option value="owner">เจ้าของร้าน</option>
+          </select>
+        </div>
+        <button type="submit" class="btn btn-primary" id="createInviteBtn">สร้างลิงก์เชิญ</button>
+      </form>
+      <div id="inviteLinkBox" class="invite-link-box hidden"></div>
+    </div>
+    <h3>คำเชิญทั้งหมด</h3>
+    <div id="invitesList"></div>
+  </section>
+
+  <script src="config.js"></script>
+  <script src="api.js"></script>
+  <script src="dashboard.js"></script>
+</body>
+</html>
