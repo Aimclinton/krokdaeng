@@ -1,5 +1,6 @@
 import { json, errorResponse } from "../lib/http.js";
 import { getAuthenticatedAdmin } from "../lib/auth.js";
+import { notifyNewOrder } from "../lib/line.js";
 
 /** Zero-pad an integer to `len` digits. */
 function pad(n, len) {
@@ -291,7 +292,7 @@ export async function createOrder(request, env) {
   const db = env.DB;
 
   const branch = await db
-    .prepare(`SELECT id FROM branches WHERE id = ? AND is_active = 1`)
+    .prepare(`SELECT id, name_th FROM branches WHERE id = ? AND is_active = 1`)
     .bind(branch_id)
     .first();
   if (!branch) return errorResponse("branch_not_found", 404);
@@ -421,6 +422,14 @@ export async function createOrder(request, env) {
   if (optionStatements.length > 0) {
     await db.batch(optionStatements);
   }
+
+  // Best-effort kitchen/staff notification — never blocks or fails the
+  // order response if LINE isn't configured yet or the push errors out.
+  await notifyNewOrder(env, {
+    order: { order_code: orderCode, dine_type, table_number: tableNumber, payment_method, total },
+    items: pricedItems,
+    branchName: branch.name_th,
+  });
 
   return json(
     {

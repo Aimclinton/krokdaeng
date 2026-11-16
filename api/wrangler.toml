@@ -14,8 +14,9 @@ binding = "IMAGES"
 bucket_name = "krokdaeng-images"
 
 # Environment variables / secrets to set later via `wrangler secret put`:
-# LINE_CHANNEL_ACCESS_TOKEN
+# LINE_CHANNEL_ACCESS_TOKEN  — LINE Messaging API channel access token (also used to push new-order Flex Messages)
 # LINE_CHANNEL_SECRET
 # LINE_LIFF_ID
+# LINE_NOTIFY_TARGET         — userId or groupId that receives new-order alerts (add the bot to a staff LINE group and use its groupId)
 # PROMPTPAY_ID
 # ADMIN_INVITE_SECRET
