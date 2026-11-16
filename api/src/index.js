@@ -8,13 +8,25 @@
  *   GET  /api/menu?branch_id=...
  *   POST /api/orders
  *   GET  /api/orders/:id
- *   POST /api/admin/login        (not yet implemented)
- *   ...
+ *   POST /api/admin/bootstrap          (first owner only, works once)
+ *   POST /api/admin/login
+ *   GET  /api/admin/me
+ *   POST /api/admin/invites            (owner/admin, authenticated)
+ *   GET  /api/admin/invites/:token
+ *   POST /api/admin/invites/:token/accept
  */
 import { json, notFound, handleOptions } from "./lib/http.js";
 import { listBranches, getBranch } from "./routes/branches.js";
 import { getMenu } from "./routes/menu.js";
 import { createOrder, getOrder } from "./routes/orders.js";
+import {
+  bootstrap,
+  login,
+  me,
+  createInvite,
+  getInvite,
+  acceptInvite,
+} from "./routes/admin.js";
 
 export default {
   async fetch(request, env, ctx) {
@@ -50,6 +62,32 @@ export default {
     const orderMatch = pathname.match(/^\/api\/orders\/(\d+)$/);
     if (orderMatch && method === "GET") {
       return getOrder(request, env, Number(orderMatch[1]));
+    }
+
+    if (pathname === "/api/admin/bootstrap" && method === "POST") {
+      return bootstrap(request, env);
+    }
+
+    if (pathname === "/api/admin/login" && method === "POST") {
+      return login(request, env);
+    }
+
+    if (pathname === "/api/admin/me" && method === "GET") {
+      return me(request, env);
+    }
+
+    if (pathname === "/api/admin/invites" && method === "POST") {
+      return createInvite(request, env);
+    }
+
+    const inviteMatch = pathname.match(/^\/api\/admin\/invites\/([^/]+)$/);
+    if (inviteMatch && method === "GET") {
+      return getInvite(request, env, inviteMatch[1]);
+    }
+
+    const acceptMatch = pathname.match(/^\/api\/admin\/invites\/([^/]+)\/accept$/);
+    if (acceptMatch && method === "POST") {
+      return acceptInvite(request, env, acceptMatch[1]);
     }
 
     return notFound(pathname);
