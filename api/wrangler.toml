@@ -1,0 +1,21 @@
+name = "krokdaeng-api"
+main = "src/index.js"
+compatibility_date = "2026-11-01"
+
+# D1 database binding - krokdaeng-db (completely separate from Ponpon's ponpon-shop)
+[[d1_databases]]
+binding = "DB"
+database_name = "krokdaeng-db"
+database_id = "2b5ff51b-88d3-4d6f-999b-1606e3860827"
+
+# R2 bucket binding - krokdaeng-images (completely separate from Ponpon's resources)
+[[r2_buckets]]
+binding = "IMAGES"
+bucket_name = "krokdaeng-images"
+
+# Environment variables / secrets to set later via `wrangler secret put`:
+# LINE_CHANNEL_ACCESS_TOKEN
+# LINE_CHANNEL_SECRET
+# LINE_LIFF_ID
+# PROMPTPAY_ID
+# ADMIN_INVITE_SECRET
