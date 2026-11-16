@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" />
+  <title>ครกแดง — สั่งอาหาร</title>
+  <link rel="stylesheet" href="style.css" />
+  <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+</head>
+<body>
+  <div id="app">
+    <!-- ===================== Branch header ===================== -->
+    <header class="topbar">
+      <div class="topbar-title">ครกแดง</div>
+      <div class="topbar-branch" id="branchName">กำลังโหลด...</div>
+    </header>
+
+    <!-- ===================== Loading / error states ===================== -->
+    <div id="loadingState" class="state-screen">
+      <div class="spinner"></div>
+      <p>กำลังโหลดเมนู...</p>
+    </div>
+
+    <div id="errorState" class="state-screen hidden">
+      <p class="error-text" id="errorMessage">เกิดข้อผิดพลาด ลองใหม่อีกครั้ง</p>
+      <button class="btn btn-primary" id="retryBtn">ลองใหม่</button>
+    </div>
+
+    <!-- ===================== Category tabs ===================== -->
+    <nav id="categoryTabs" class="category-tabs hidden"></nav>
+
+    <!-- ===================== Menu list ===================== -->
+    <main id="menuList" class="menu-list hidden"></main>
+
+    <!-- ===================== Cart bar (floating) ===================== -->
+    <button id="cartBar" class="cart-bar hidden" type="button">
+      <span id="cartCount" class="cart-bar-count">0</span>
+      <span class="cart-bar-label">ดูตะกร้า</span>
+      <span id="cartTotal" class="cart-bar-total">฿0</span>
+    </button>
+
+    <!-- ===================== Item detail / option sheet ===================== -->
+    <div id="itemSheetOverlay" class="sheet-overlay hidden">
+      <div class="sheet" id="itemSheet"></div>
+    </div>
+
+    <!-- ===================== Cart sheet ===================== -->
+    <div id="cartSheetOverlay" class="sheet-overlay hidden">
+      <div class="sheet" id="cartSheet"></div>
+    </div>
+
+    <!-- ===================== Order confirmation screen ===================== -->
+    <div id="confirmScreen" class="state-screen hidden"></div>
+  </div>
+
+  <script src="config.js"></script>
+  <script src="api.js"></script>
+  <script src="cart.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

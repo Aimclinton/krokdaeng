@@ -6,6 +6,7 @@
  *   GET  /api/branches
  *   GET  /api/branches/:id
  *   GET  /api/menu?branch_id=...
+ *   GET  /api/images/:key              (streams a photo out of R2)
  *   POST /api/orders
  *   GET  /api/orders/:id
  *   POST /api/admin/bootstrap          (first owner only, works once)
@@ -27,6 +28,7 @@ import {
   getInvite,
   acceptInvite,
 } from "./routes/admin.js";
+import { getImage } from "./routes/images.js";
 
 export default {
   async fetch(request, env, ctx) {
@@ -62,6 +64,11 @@ export default {
     const orderMatch = pathname.match(/^\/api\/orders\/(\d+)$/);
     if (orderMatch && method === "GET") {
       return getOrder(request, env, Number(orderMatch[1]));
+    }
+
+    const imageMatch = pathname.match(/^\/api\/images\/(.+)$/);
+    if (imageMatch && method === "GET") {
+      return getImage(request, env, decodeURIComponent(imageMatch[1]));
     }
 
     if (pathname === "/api/admin/bootstrap" && method === "POST") {
